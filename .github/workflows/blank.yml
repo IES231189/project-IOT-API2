@@ -82,7 +82,7 @@ jobs:
     - name: Send Push Event to API
       if: github.event_name == 'push'
       run: |
-        curl -X POST  https://7f64-2806-262-3484-1180-543b-5d18-c0ea-c212.ngrok-free.app/webhook \
+        curl -X POST   https://7f64-2806-262-3484-1180-543b-5d18-c0ea-c212.ngrok-free.app  \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",
@@ -92,7 +92,6 @@ jobs:
             "user": "${{ github.event.sender.login }}",
             "branch": "${{ github.ref_name }}"
           }'
-
     # Enviar evento a la API cuando las pruebas pasan con éxito
     - name: Send Tests Passed Event to API
       if: success()

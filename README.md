@@ -1,4 +1,4 @@
-# Proyecto API Publicadora IoT
+# Proyecto API SuscriptoraIoT
 
 Este proyecto utiliza **Go versión 1.23** y consta de una API publicadora con arquitectura hexagonal y enfoque **event-driven**. Está diseñado para manejar tópicos en **MQTT**, específicamente para proyectos IoT.
 

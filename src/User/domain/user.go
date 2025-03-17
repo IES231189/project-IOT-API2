@@ -5,9 +5,8 @@ import (
 )
 
 type User struct {
-	ID primitive.ObjectID
-	Nombre string
-	Correo string
-	Pin string
-
+	ID     primitive.ObjectID `bson:"_id,omitempty" json:"id"` // Asegúrate de usar _id para MongoDB
+	Nombre string             `bson:"Nombre" json:"nombre"`
+	Correo string             `bson:"Correo" json:"correo"`
+	Pin    string             `bson:"Pin" json:"pin"`
 }

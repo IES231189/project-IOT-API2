@@ -6,6 +6,7 @@ import (
 )
 
 // SetupRoutes configura las rutas para los usuarios
+
 func SetupRoutes(r *gin.Engine) {
 	// Rutas para la gestión de usuarios
 	r.POST("/users", controllers.CrearUserHandler)                         // Crear un nuevo usuario

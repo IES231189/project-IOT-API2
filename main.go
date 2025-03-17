@@ -1,8 +1,11 @@
 package main
 
 import (
+	"api/src/User/application"
+	"api/src/User/infraestructure"
+	"api/src/User/infraestructure/Mqtt"
+	"api/src/User/infraestructure/routers" // Asegúrate de importar el paquete de rutas correctamente
 	"api/src/core"
-	ok "api/src/User/infraestructure/routers" // Aquí importamos las rutas de usuarios
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -19,7 +22,6 @@ func handler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al conectar con la base de datos"})
 		return
 	}
-
 	log.Printf("Bases de datos disponibles: %v", databases)
 	c.JSON(http.StatusOK, gin.H{"message": "Conexión exitosa a MongoDB"})
 }
@@ -37,15 +39,16 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-
-	ok.SetupRoutes(r)
-
-
-	// Configuración de las rutas para usuarios
-	
+	// Configurar rutas correctamente
+	routes.SetupRoutes(r) // Aquí estás utilizando las rutas definidas en el paquete routes
 
 	// Ruta de prueba para verificar conexión con MongoDB
 	r.GET("/testMongo", handler)
+
+	// Inicializar la conexión MQTT y la suscripción
+	repo := infraestructure.NewMongoUserRepository()
+	useCase := application.NewObtenerUsuarioPorPin(repo)
+	Mqtt.NewMqttService(useCase) // Inicia la suscripción a MQTT
 
 	// Iniciar servidor en el puerto 8080
 	log.Println("Servidor escuchando en el puerto 8080...")

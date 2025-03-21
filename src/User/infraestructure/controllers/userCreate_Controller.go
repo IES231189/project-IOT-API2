@@ -5,8 +5,8 @@ import (
 	"api/src/User/domain"
 	"api/src/User/infraestructure"
 	"github.com/gin-gonic/gin"
-	"encoding/json"
 	"net/http"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CrearUserHandler maneja la solicitud para crear un usuario.
@@ -17,16 +17,20 @@ func CrearUserHandler(c *gin.Context) {
 
 	// Decodificar el JSON del cuerpo de la solicitud
 	var user domain.User
-	err := json.NewDecoder(c.Request.Body).Decode(&user)
-	if err != nil {
-		http.Error(c.Writer, "Error al decodificar JSON", http.StatusBadRequest)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
+	}
+
+	// Generar un ObjectID si no está presente
+	if user.ID.IsZero() {
+		user.ID = primitive.NewObjectID()
 	}
 
 	// Ejecutar la lógica de negocio para crear un usuario
 	userID, err := crearUsuarioUC.Ejecutar(&user)
 	if err != nil {
-		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el usuario"})
 		return
 	}
 

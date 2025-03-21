@@ -9,4 +9,5 @@ type User struct {
 	Nombre string             `bson:"Nombre" json:"nombre"`
 	Correo string             `bson:"Correo" json:"correo"`
 	Pin    string             `bson:"Pin" json:"pin"`
+	MisInvitados []Invitado
 }

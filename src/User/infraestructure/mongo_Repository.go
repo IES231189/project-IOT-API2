@@ -4,11 +4,12 @@ import (
 	"api/src/User/domain"
 	"api/src/core"
 	"context"
+	"fmt"
 	"log"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"fmt"
 )
 
 type MongoUserRepository struct {
@@ -21,7 +22,7 @@ func NewMongoUserRepository() *MongoUserRepository {
 	if client == nil {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
-	collection := client.Database("base_iot_db").Collection("usuarios")
+	collection := client.Database("proyecto").Collection("Usuarios")
 	return &MongoUserRepository{collection: collection}
 }
 
@@ -30,6 +31,9 @@ func (r *MongoUserRepository) CreateUser(user *domain.User) (string, error) {
 	if user == nil {
 		return "", fmt.Errorf("el usuario no puede ser nil")
 	}
+
+	// Asigna un nuevo ObjectID al usuario si aún no tiene uno
+	user.ID = primitive.NewObjectID()
 
 	result, err := r.collection.InsertOne(context.TODO(), user)
 	if err != nil {
@@ -109,4 +113,56 @@ func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
 
 	log.Printf("Usuario encontrado: %+v", user)
 	return &user, nil
+}
+
+// UpdateUser actualiza los datos de un usuario por su ID
+func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *domain.User) error {
+	if updatedUser == nil {
+		return fmt.Errorf("los datos del usuario no pueden ser nil")
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		log.Printf("Error al convertir ID a ObjectID: %v", err)
+		return fmt.Errorf("ID inválido")
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"nombre": updatedUser.Nombre,
+			"correo": updatedUser.Correo,
+			"pin":    updatedUser.Pin,
+		},
+	}
+
+	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectID}, update)
+	if err != nil {
+		log.Printf("Error al actualizar usuario: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// AddGuest agrega un nuevo invitado a la lista de mis_invitados de un usuario
+func (r *MongoUserRepository) AddGuest(userID string, guest domain.Invitado) error {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Printf("Error al convertir userID a ObjectID: %v", err)
+		return fmt.Errorf("ID inválido")
+	}
+
+	guest.InvitadoID = primitive.NewObjectID() // Generamos un nuevo ID para el invitado
+
+	update := bson.M{
+		"$push": bson.M{"MisInvitados": guest}, // Agrega el nuevo invitado a la lista
+	}
+
+	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectID}, update)
+	if err != nil {
+		log.Printf("Error al agregar invitado: %v", err)
+		return err
+	}
+
+	return nil
 }

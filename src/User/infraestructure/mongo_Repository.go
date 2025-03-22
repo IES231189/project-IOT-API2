@@ -166,3 +166,51 @@ func (r *MongoUserRepository) AddGuest(userID string, guest domain.Invitado) err
 
 	return nil
 }
+
+
+func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
+	objectUserID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Printf("Error al convertir userID a ObjectID: %v", err)
+		return fmt.Errorf("ID de usuario inválido")
+	}
+
+	objectGuestID, err := primitive.ObjectIDFromHex(guestID)
+	if err != nil {
+		log.Printf("Error al convertir guestID a ObjectID: %v", err)
+		return fmt.Errorf("ID de invitado inválido")
+	}
+
+
+	var usuario domain.User
+	err = r.collection.FindOne(context.TODO(), bson.M{"_id": objectUserID}).Decode(&usuario)
+	if err != nil {
+		log.Printf("⚠️ No se encontró el usuario con ID: %s", userID)
+		return fmt.Errorf("usuario no encontrado")
+	}
+
+	
+	log.Printf("Invitados actuales: %+v", usuario.MisInvitados)
+
+	// Intentar eliminar el invitado
+	update := bson.M{
+		"$pull": bson.M{
+			"MisInvitados": bson.M{"invitado_id": objectGuestID}, // ✅ CORRECCIÓN
+		},
+	}
+
+	result, err := r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectUserID}, update)
+	if err != nil {
+		log.Printf("Error al eliminar invitado: %v", err)
+		return err
+	}
+
+	
+	if result.ModifiedCount == 0 {
+		log.Println("⚠️ No se encontró el invitado o ya había sido eliminado")
+		return mongo.ErrNoDocuments
+	}
+
+	log.Println("Invitado eliminado correctamente de la base de datos")
+	return nil
+}

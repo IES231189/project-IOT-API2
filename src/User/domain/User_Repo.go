@@ -7,5 +7,5 @@ type UserRepository interface {
 	GetAllUsers() ([]User, error)                // Obtener todos los usuarios
 	GetUserByPin(Pin string) (*User, error)      
 	AddGuest(userID string, guest Invitado) error
-	//RemoveGuest(userID string, guestID string) error
+	RemoveGuest(userID string, guestID string) error
 }

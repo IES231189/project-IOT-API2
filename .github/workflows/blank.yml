@@ -34,7 +34,7 @@ jobs:
     - name: Send PR Opened Event to API
       if: github.event_name == 'pull_request' && github.event.action == 'opened'
       run: |
-        curl -X POST    https://b56d-2806-262-3484-1180-78e1-adf4-98a6-5ce8.ngrok-free.app/webhook \
+        curl -X POST    https://08fa-2806-262-3484-1180-7c72-3fcb-f84-7f3a.ngrok-free.app/webhook \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",
@@ -50,7 +50,7 @@ jobs:
     - name: Send PR Review Requested Event to API
       if: github.event_name == 'pull_request' && github.event.action == 'review_requested'
       run: |
-        curl -X POST   https://b56d-2806-262-3484-1180-78e1-adf4-98a6-5ce8.ngrok-free.app/webhook \
+        curl -X POST   https://08fa-2806-262-3484-1180-7c72-3fcb-f84-7f3a.ngrok-free.app/webhook \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",
@@ -66,7 +66,7 @@ jobs:
     - name: Send PR Merged Event to API
       if: github.event.pull_request.merged == true
       run: |
-        curl -X POST     https://b56d-2806-262-3484-1180-78e1-adf4-98a6-5ce8.ngrok-free.app/webhook \
+        curl -X POST      https://08fa-2806-262-3484-1180-7c72-3fcb-f84-7f3a.ngrok-free.app/webhook \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",
@@ -82,7 +82,7 @@ jobs:
     - name: Send Push Event to API
       if: github.event_name == 'push'
       run: |
-        curl -X POST      https://b56d-2806-262-3484-1180-78e1-adf4-98a6-5ce8.ngrok-free.app/webhook  \
+        curl -X POST      https://08fa-2806-262-3484-1180-7c72-3fcb-f84-7f3a.ngrok-free.app/webhook  \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",
@@ -96,7 +96,7 @@ jobs:
     - name: Send Tests Passed Event to API
       if: success()
       run: |
-        curl -X POST     https://b56d-2806-262-3484-1180-78e1-adf4-98a6-5ce8.ngrok-free.app/webhook \
+        curl -X POST      https://08fa-2806-262-3484-1180-7c72-3fcb-f84-7f3a.ngrok-free.app/webhook \
           -H "Content-Type: application/json" \
           -d '{
             "repo": "${{ github.event.repository.full_name }}",

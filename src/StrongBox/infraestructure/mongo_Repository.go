@@ -111,3 +111,54 @@ func (r *MongoStrongBoxRepository) GetStrongBoxByID(ID string) (*domain.StrongBo
 	log.Printf("Caja fuerte encontrada: %+v", strongBox)
 	return &strongBox, nil
 }
+
+func (r *MongoStrongBoxRepository) AddUserToStrongBox(boxID string, user *domain.UserStrongBox) error {
+	objectBoxID, err := primitive.ObjectIDFromHex(boxID)
+	if err != nil {
+		log.Printf("Error al convertir boxID a ObjectID: %v", err)
+		return fmt.Errorf("ID de la caja inválido")
+	}
+
+	user.UsuarioID = primitive.NewObjectID() // Asigna un nuevo ID si no tiene uno
+
+	update := bson.M{
+		"$push": bson.M{"usuarios_con_acceso": user}, // Agrega el usuario al array
+	}
+
+	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectBoxID}, update)
+	if err != nil {
+		log.Printf("Error al agregar usuario a la caja: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// Eliminar un usuario de la caja fuerte
+func (r *MongoStrongBoxRepository) RemoveUserFromStrongBox(boxID string, userID string) error {
+	objectBoxID, err := primitive.ObjectIDFromHex(boxID)
+	if err != nil {
+		log.Printf("Error al convertir boxID a ObjectID: %v", err)
+		return fmt.Errorf("ID de la caja inválido")
+	}
+
+	objectUserID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Printf("Error al convertir userID a ObjectID: %v", err)
+		return fmt.Errorf("ID de usuario inválido")
+	}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"usuarios_con_acceso": bson.M{"usuario_id": objectUserID}, // Elimina el usuario del array
+		},
+	}
+
+	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectBoxID}, update)
+	if err != nil {
+		log.Printf("Error al eliminar usuario de la caja: %v", err)
+		return err
+	}
+
+	return nil
+}

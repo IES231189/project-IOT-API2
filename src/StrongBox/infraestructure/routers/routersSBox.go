@@ -7,9 +7,11 @@ import (
 
 // SetupStrongBoxRoutes configura las rutas para la gestión de cajas fuertes (StrongBox)
 func SetupStrongBoxRoutes(r *gin.Engine) {
-	// Rutas para la gestión de cajas fuertes
+	
+	r.POST("/strongbox/:boxID/users", controllers.AddUserToStrongBox)
 	r.POST("/strongbox", controllers.CrearStrongBoxHandler)                
 	r.GET("/strongboxes", controllers.ObtenerStrongBoxByIDHandler)              
 	r.GET("/strongboxes/:id", controllers.ObtenerStrongBoxByIDHandler)       
-	r.DELETE("/strongboxes/:id", controllers.EliminarStrongBoxHandler)         
+	r.DELETE("/strongboxes/:id", controllers.EliminarStrongBoxHandler)
+	r.DELETE("/strongbox/:boxID/users/:userID", controllers.RemoveUserFromStrongBoxHandler)
 }

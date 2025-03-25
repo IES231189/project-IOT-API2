@@ -1,14 +1,14 @@
 package application
 
-import "api/src/User/domain"
+import "api/src/User/domain/repository"
 
 
 type RemoverInvitado struct {
-	repo domain.UserRepository
+	repo repository.UserRepository
 }
 
 
-func NewRemoverInvitado(repo domain.UserRepository) *RemoverInvitado {
+func NewRemoverInvitado(repo repository.UserRepository) *RemoverInvitado {
 	return &RemoverInvitado{repo: repo}
 }
 

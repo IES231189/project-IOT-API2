@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"api/src/User/application"
-	"api/src/User/domain"
+	"api/src/User/domain/entities"
 	"api/src/User/infraestructure"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -16,7 +16,7 @@ func CrearUserHandler(c *gin.Context) {
 	crearUsuarioUC := application.NewCrearUsuario(repo)
 
 	// Decodificar el JSON del cuerpo de la solicitud
-	var user domain.User
+	var user entities.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return

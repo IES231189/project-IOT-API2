@@ -1,20 +1,22 @@
 package application
 
 import (
-	"api/src/User/domain"
 	"errors"
+	"api/src/User/domain/repository"
+	"api/src/User/domain/entities"
 )
 
+
 type UserService struct {
-	repo domain.UserRepository
+	repo repository.UserRepository
 }
 
-func NewUserService(repo domain.UserRepository) *UserService {
+func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
 
-func (s *UserService) AddGuest(userID string, invitado domain.Invitado) error {
+func (s *UserService) AddGuest(userID string, invitado entities.Invitado) error {
 	if userID == "" {
 		return errors.New("el ID del usuario no puede estar vacío")
 	}

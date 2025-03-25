@@ -1,7 +1,7 @@
 package infraestructure
 
 import (
-	"api/src/User/domain"
+	"api/src/User/domain/entities"
 	"api/src/core"
 	"context"
 	"fmt"
@@ -22,12 +22,12 @@ func NewMongoUserRepository() *MongoUserRepository {
 	if client == nil {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
-	collection := client.Database("proyecto").Collection("Usuarios")
+	collection := client.Database("base_iot_db").Collection("usuarios")
 	return &MongoUserRepository{collection: collection}
 }
 
 // CreateUser crea un nuevo usuario en la base de datos
-func (r *MongoUserRepository) CreateUser(user *domain.User) (string, error) {
+func (r *MongoUserRepository) CreateUser(user *entities.User) (string, error) {
 	if user == nil {
 		return "", fmt.Errorf("el usuario no puede ser nil")
 	}
@@ -67,8 +67,8 @@ func (r *MongoUserRepository) DeleteUser(ID string) error {
 }
 
 // GetAllUsers obtiene todos los usuarios de la base de datos
-func (r *MongoUserRepository) GetAllUsers() ([]domain.User, error) {
-	var users []domain.User
+func (r *MongoUserRepository) GetAllUsers() ([]entities.User, error) {
+	var users []entities.User
 
 	cursor, err := r.collection.Find(context.TODO(), bson.M{})
 	if err != nil {
@@ -78,7 +78,7 @@ func (r *MongoUserRepository) GetAllUsers() ([]domain.User, error) {
 	defer cursor.Close(context.TODO())
 
 	for cursor.Next(context.TODO()) {
-		var user domain.User
+		var user entities.User
 		if err := cursor.Decode(&user); err != nil {
 			log.Printf("Error al decodificar usuario: %v", err)
 			return nil, err
@@ -95,12 +95,12 @@ func (r *MongoUserRepository) GetAllUsers() ([]domain.User, error) {
 }
 
 // GetUserByPin busca un usuario por su PIN
-func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
+func (r *MongoUserRepository) GetUserByPin(Pin string) (*entities.User, error) {
 	if Pin == "" {
 		return nil, fmt.Errorf("el PIN no puede estar vacío")
 	}
 
-	var user domain.User
+	var user entities.User
 	err := r.collection.FindOne(context.TODO(), bson.M{"Pin": Pin}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -116,7 +116,7 @@ func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
 }
 
 // UpdateUser actualiza los datos de un usuario por su ID
-func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *domain.User) error {
+func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *entities.User) error {
 	if updatedUser == nil {
 		return fmt.Errorf("los datos del usuario no pueden ser nil")
 	}
@@ -145,7 +145,7 @@ func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *domain.User) er
 }
 
 // AddGuest agrega un nuevo invitado a la lista de mis_invitados de un usuario
-func (r *MongoUserRepository) AddGuest(userID string, guest domain.Invitado) error {
+func (r *MongoUserRepository) AddGuest(userID string, guest entities.Invitado) error {
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Printf("Error al convertir userID a ObjectID: %v", err)

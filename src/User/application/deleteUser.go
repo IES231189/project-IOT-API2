@@ -1,15 +1,15 @@
 package application
 
 import (
-	"api/src/User/domain"
+	"api/src/User/domain/repository"
 )
 
 type EliminarUsuario struct {
-	repo domain.UserRepository
+	repo repository.UserRepository
 }
 
 // NewEliminarUsuario crea una nueva instancia del caso de uso EliminarUsuario
-func NewEliminarUsuario(repo domain.UserRepository) *EliminarUsuario {
+func NewEliminarUsuario(repo repository.UserRepository) *EliminarUsuario {
 	return &EliminarUsuario{repo: repo}
 }
 

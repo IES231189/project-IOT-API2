@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"api/src/User/domain"
+	"api/src/User/domain/entities"
 	"api/src/User/infraestructure"
 	"net/http"
     "github.com/gin-gonic/gin"
@@ -10,7 +10,7 @@ import (
 
 func AddGuestHandler(c *gin.Context) {
     userID := c.Param("userID")
-    var guest domain.Invitado
+    var guest entities.Invitado
 
     if err := c.ShouldBindJSON(&guest); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "Error en el formato del JSON"})

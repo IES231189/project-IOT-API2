@@ -1,9 +1,11 @@
 package main
 
 import (
-	//"api/src/User/application"
-	//"api/src/User/infraestructure"
-	//"api/src/User/infraestructure/Mqtt"
+	"api/src/User/infraestructure/controllers"
+	"api/src/User/application"
+	"api/src/User/infraestructure"
+	"api/src/User/infraestructure/repository"
+	"api/src/User/infraestructure/Mqtt"
 	userRoutes "api/src/User/infraestructure/routers" 
 	strongBoxRoutes "api/src/StrongBox/infraestructure/routers" 
 	"api/src/core"
@@ -49,11 +51,18 @@ func main() {
 	// Ruta de prueba para verificar conexión con MongoDB
 	r.GET("/testMongo", handler)
 
-	// Inicializar la conexión MQTT y la suscripción
-	//repo := infraestructure.NewMongoUserRepository()
-	//useCase := application.NewObtenerUsuarioPorPin(repo)
-	//Mqtt.NewMqttService(useCase) // Inicia la suscripción a MQTT
+	client := core.GetMongoClient() // Obtener la instancia del cliente MongoDB
+    accesoRepo := repository.NewMongoAccesoRepository(client) // Pasarlo a la función
 
+
+	controllers.InitAccesoController(accesoRepo)
+
+	//Inicializar la conexión MQTT y la suscripción
+	repo := infraestructure.NewMongoUserRepository()
+	useCase := application.NewObtenerUsuarioPorPin(repo)
+	Mqtt.NewMqttService(useCase , accesoRepo) // Inicia la suscripción a MQTT
+
+	
 	// Iniciar servidor en el puerto 8080
 	log.Println("Servidor escuchando en el puerto 8080...")
 	if err := r.Run(":8080"); err != nil {

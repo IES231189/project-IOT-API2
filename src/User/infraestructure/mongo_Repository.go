@@ -96,7 +96,7 @@ func (r *MongoUserRepository) GetAllUsers() ([]entities.User, error) {
 	return users, nil
 }
 
-// GetUserByPin busca un usuario por su PIN
+/* GetUserByPin busca un usuario por su PIN
 func (r *MongoUserRepository) GetUserByPin(Pin string) (*entities.User, error) {
 	if Pin == "" {
 		return nil, fmt.Errorf("el PIN no puede estar vacío")
@@ -115,6 +115,35 @@ func (r *MongoUserRepository) GetUserByPin(Pin string) (*entities.User, error) {
 
 	log.Printf("Usuario encontrado: %+v", user)
 	return &user, nil
+}*/
+
+// GetUserByPin busca un usuario por su PIN (tanto en el PIN principal como en los de invitados)
+func (r *MongoUserRepository) GetUserByPin(Pin string) (*entities.User, error) {
+    if Pin == "" {
+        return nil, fmt.Errorf("el PIN no puede estar vacío")
+    }
+
+    // Consulta que busca tanto en el PIN principal como en los PINs de los invitados
+    filter := bson.M{
+        "$or": []bson.M{
+            {"Pin": Pin}, // Busca en el PIN principal
+            {"MisInvitados.pin": Pin}, // Busca en los PINs de los invitados
+        },
+    }
+
+    var user entities.User
+    err := r.collection.FindOne(context.TODO(), filter).Decode(&user)
+    if err != nil {
+        if err == mongo.ErrNoDocuments {
+            log.Printf("Usuario con PIN %s no encontrado", Pin)
+            return nil, nil
+        }
+        log.Printf("Error al buscar usuario por PIN: %v", err)
+        return nil, err
+    }
+
+    log.Printf("Usuario encontrado: %+v", user)
+    return &user, nil
 }
 
 // UpdateUser actualiza los datos de un usuario por su ID

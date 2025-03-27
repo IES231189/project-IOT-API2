@@ -7,10 +7,12 @@ import (
 	"os"
 	"sync"
 	"time"
+	"errors"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/dgrijalva/jwt-go"
 )
 
 var (
@@ -74,4 +76,26 @@ func GetMongoDatabase() *mongo.Database {
 
 	client := GetMongoClient()
 	return client.Database(dbName)
+}
+
+func GenerateJWT(userID string) (string, error) {
+	// Obtén el secreto desde el entorno (asegúrate de que JWT_SECRET esté configurado en tu entorno)
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "", errors.New("JWT_SECRET no está configurado")
+	}
+
+	// Creamos un token con claims (reclamos) que incluyen el ID del usuario
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": userID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(), // El token expira en 24 horas
+	})
+
+	// Firmamos el token
+	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }

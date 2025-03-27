@@ -4,39 +4,40 @@ import (
 	"api/src/User/application"
 	"api/src/User/domain"
 	"api/src/User/infraestructure"
-	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/gin-gonic/gin"
 )
 
-// CrearUserHandler maneja la solicitud para crear un usuario.
-func CrearUserHandler(c *gin.Context) {
-	// Inicializa el repositorio y el caso de uso directamente en el controlador
-	repo := infraestructure.NewMongoUserRepository()
-	crearUsuarioUC := application.NewCrearUsuario(repo)
+// CrearUsuarioHandler maneja la creación de un nuevo usuario
+func CrearUsuarioHandler(c *gin.Context) {
+	log.Println("Método recibido: POST")
 
-	// Decodificar el JSON del cuerpo de la solicitud
 	var user domain.User
+
+	// Parsear el cuerpo de la solicitud JSON a la estructura del usuario
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
+		log.Printf("Error al parsear los datos: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Solicitud inválida"})
 		return
 	}
 
-	// Generar un ObjectID si no está presente
-	if user.ID.IsZero() {
-		user.ID = primitive.NewObjectID()
-	}
+	// Crear una instancia del repositorio para el caso de uso
+	repo := infraestructure.NewMongoUserRepository()
 
-	// Ejecutar la lógica de negocio para crear un usuario
-	userID, err := crearUsuarioUC.Ejecutar(&user)
+	// Crear el caso de uso para crear el usuario
+	useCase := application.NewCrearUsuario(repo)
+
+	// Llamar al caso de uso para crear el usuario (se encriptará la contraseña dentro del caso de uso)
+	userID, err := useCase.Ejecutar(&user)
 	if err != nil {
+		log.Printf("Error al crear usuario: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el usuario"})
 		return
 	}
 
-	// Responder con el ID del usuario creado
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Usuario creado exitosamente",
-		"user_id": userID,
-	})
+	log.Println("Usuario creado correctamente con ID:", userID)
+	// Devolver una respuesta con el ID del usuario creado
+	c.JSON(http.StatusOK, gin.H{"message": "Usuario creado correctamente", "user_id": userID})
 }

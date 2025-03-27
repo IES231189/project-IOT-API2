@@ -5,8 +5,11 @@ import (
 	"api/src/core"
 	"context"
 	"fmt"
+	"strings"
 	"log"
+	"errors"
 
+	"golang.org/x/crypto/bcrypt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,6 +51,37 @@ func (r *MongoUserRepository) CreateUser(user *domain.User) (string, error) {
 	}
 	return objectID.Hex(), nil
 }
+
+func (r *MongoUserRepository) LoginUser(correo, contraseña string) (*domain.User, error) {
+	var user domain.User
+
+	// Convertir el correo a minúsculas antes de la búsqueda
+	correo = strings.ToLower(correo)
+	log.Println("Buscando usuario con correo:", correo)
+
+	// Realizamos la consulta a MongoDB usando el campo "correo"
+	err := r.collection.FindOne(context.TODO(), bson.M{"correo": correo}).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Println("Usuario no encontrado con correo:", correo)
+			return nil, nil // Usuario no encontrado
+		}
+		log.Println("Error al buscar usuario en MongoDB:", err)
+		return nil, err
+	}
+
+	log.Println("Usuario encontrado:", user.ID.Hex(), "| Correo:", user.Correo)
+
+	// Comparar la contraseña (la contraseña almacenada debe ser un hash generado por bcrypt)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Contraseña), []byte(contraseña))
+	if err != nil {
+		log.Println("Contraseña incorrecta para el usuario:", correo)
+		return nil, errors.New("Contraseña incorrecta")
+	}
+
+	return &user, nil
+}
+
 
 // DeleteUser elimina un usuario de la base de datos por ID
 func (r *MongoUserRepository) DeleteUser(ID string) error {
@@ -131,6 +165,7 @@ func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *domain.User) er
 		"$set": bson.M{
 			"nombre": updatedUser.Nombre,
 			"correo": updatedUser.Correo,
+			"contraseña": updatedUser.Contraseña,
 			"pin":    updatedUser.Pin,
 		},
 	}
@@ -214,3 +249,5 @@ func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 	log.Println("Invitado eliminado correctamente de la base de datos")
 	return nil
 }
+
+

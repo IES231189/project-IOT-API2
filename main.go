@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// Función para verificar la conexión a MongoDB
+// verificando conexion con mongo
 func handler(c *gin.Context) {
 	client := core.GetMongoClient()
 	databases, err := client.ListDatabaseNames(c, nil)
@@ -42,17 +42,16 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// Configurar rutas de usuarios
-	userRoutes.SetupRoutes(r) // Usamos el nombre 'userRoutes' para las rutas de usuario
+	
+	userRoutes.SetupRoutes(r) 
 
-	// Configurar rutas de StrongBox
-	strongBoxRoutes.SetupStrongBoxRoutes(r) // Usamos el nombre 'strongBoxRoutes' para las rutas de StrongBox
+	
+	strongBoxRoutes.SetupStrongBoxRoutes(r) 
 
-	// Ruta de prueba para verificar conexión con MongoDB
 	r.GET("/testMongo", handler)
 
-	client := core.GetMongoClient() // Obtener la instancia del cliente MongoDB
-    accesoRepo := repository.NewMongoAccesoRepository(client) // Pasarlo a la función
+	client := core.GetMongoClient() 
+    accesoRepo := repository.NewMongoAccesoRepository(client) 
 
 
 	controllers.InitAccesoController(accesoRepo)
@@ -60,10 +59,10 @@ func main() {
 	//Inicializar la conexión MQTT y la suscripción
 	repo := infraestructure.NewMongoUserRepository()
 	useCase := application.NewObtenerUsuarioPorPin(repo)
-	Mqtt.NewMqttService(useCase , accesoRepo) // Inicia la suscripción a MQTT
+	Mqtt.NewMqttService(useCase , accesoRepo) 
 
 	
-	// Iniciar servidor en el puerto 8080
+
 	log.Println("Servidor escuchando en el puerto 8080...")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Error al iniciar el servidor: %v", err)

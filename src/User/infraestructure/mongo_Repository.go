@@ -250,4 +250,28 @@ func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 	return nil
 }
 
+func (r *MongoUserRepository) GetGuestsByUserID(userID string) ([]domain.Invitado, error) {
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Printf("Error al convertir userID a ObjectID: %v", err)
+		return nil, fmt.Errorf("ID de usuario inválido")
+	}
+
+	var usuario domain.User
+	err = r.collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&usuario)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Printf("Usuario con ID %s no encontrado", userID)
+			return nil, fmt.Errorf("usuario no encontrado")
+		}
+		log.Printf("Error al buscar usuario por ID: %v", err)
+		return nil, err
+	}
+
+	log.Printf("Invitados encontrados para el usuario con ID %s: %+v", userID, usuario.MisInvitados)
+
+	return usuario.MisInvitados, nil
+}
+
+
 

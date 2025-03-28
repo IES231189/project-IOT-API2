@@ -6,6 +6,7 @@ type UserRepository interface {
 	DeleteUser(ID string) error                  // Eliminar un usuario por ID
 	GetAllUsers() ([]User, error)                // Obtener todos los usuarios
 	GetUserByPin(Pin string) (*User, error)
+	GetGuestsByUserID(userID string) ([]Invitado, error) 
 	LoginUser(correo, contraseña string) (*User, error)      
 	AddGuest(userID string, guest Invitado) error
 	RemoveGuest(userID string, guestID string) error

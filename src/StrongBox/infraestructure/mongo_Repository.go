@@ -1,7 +1,8 @@
 package infraestructure
 
 import (
-	"api/src/StrongBox/domain"
+	User "api/src/User/domain"           
+	"api/src/StrongBox/domain" 
 	"api/src/core"
 	"context"
 	"log"
@@ -9,10 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"fmt"
+
 )
 
 type MongoStrongBoxRepository struct {
 	collection *mongo.Collection
+	userCollection *mongo.Collection  // Agregamos la referencia a la colección de usuarios
 }
 
 // NewMongoStrongBoxRepository inicializa un nuevo repositorio de MongoDB para StrongBox
@@ -22,7 +25,8 @@ func NewMongoStrongBoxRepository() *MongoStrongBoxRepository {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
 	collection := client.Database("proyecto").Collection("StrongBox")
-	return &MongoStrongBoxRepository{collection: collection}
+	userCollection := client.Database("proyecto").Collection("User") // Inicializamos la colección de usuarios
+	return &MongoStrongBoxRepository{collection: collection, userCollection: userCollection}
 }
 
 // CreateStrongBox crea una nueva caja fuerte en la base de datos
@@ -111,20 +115,61 @@ func (r *MongoStrongBoxRepository) GetStrongBoxByID(ID string) (*domain.StrongBo
 	log.Printf("Caja fuerte encontrada: %+v", strongBox)
 	return &strongBox, nil
 }
-
-func (r *MongoStrongBoxRepository) AddUserToStrongBox(boxID string, user *domain.UserStrongBox) error {
+func (r *MongoStrongBoxRepository) AddUserToStrongBox(boxID string, userID string) error {
+	// Convertir el boxID a ObjectID
 	objectBoxID, err := primitive.ObjectIDFromHex(boxID)
 	if err != nil {
 		log.Printf("Error al convertir boxID a ObjectID: %v", err)
 		return fmt.Errorf("ID de la caja inválido")
 	}
 
-	user.UsuarioID = primitive.NewObjectID() // Asigna un nuevo ID si no tiene uno
-
-	update := bson.M{
-		"$push": bson.M{"usuarios_con_acceso": user}, // Agrega el usuario al array
+	// Convertir el userID (invitado_id) a ObjectID
+	objectUserID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		log.Printf("Error al convertir userID a ObjectID: %v", err)
+		return fmt.Errorf("ID del usuario inválido")
 	}
 
+	// Buscar en la colección "User" un usuario que tenga un invitado con ese ID
+	var user User.User
+	filter := bson.M{"invitados.invitado_id": objectUserID}
+	err = r.userCollection.FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			log.Println("Error: Usuario invitado no encontrado en ningún usuario.")
+			return fmt.Errorf("usuario invitado no encontrado")
+		}
+		log.Printf("Error al buscar usuario invitado en la base de datos: %v", err)
+		return err
+	}
+
+	// Buscar el usuario dentro del array de invitados
+	var invitedUser User.Invitado
+	for _, invitado := range user.MisInvitados {
+		if invitado.InvitadoID == objectUserID {
+			invitedUser = invitado
+			break
+		}
+	}
+
+	if invitedUser.InvitadoID.IsZero() {
+		log.Println("Error: No se encontró el usuario invitado en la lista de invitados.")
+		return fmt.Errorf("usuario invitado no encontrado en la lista")
+	}
+
+	// Crear el objeto de usuario para agregarlo a la caja fuerte
+	userToAdd := &domain.UserStrongBox{
+		UsuarioID: invitedUser.InvitadoID, // ID del invitado
+		Nombre:    invitedUser.Nombre,     // Nombre del invitado
+		Pin:       invitedUser.Pin,        // PIN del invitado
+	}
+
+	// Agregar el usuario al array `usuarios_con_acceso` en la caja fuerte
+	update := bson.M{
+		"$push": bson.M{"usuarios_con_acceso": userToAdd},
+	}
+
+	// Realizar la actualización en la base de datos
 	_, err = r.collection.UpdateOne(context.TODO(), bson.M{"_id": objectBoxID}, update)
 	if err != nil {
 		log.Printf("Error al agregar usuario a la caja: %v", err)
@@ -134,7 +179,8 @@ func (r *MongoStrongBoxRepository) AddUserToStrongBox(boxID string, user *domain
 	return nil
 }
 
-// Eliminar un usuario de la caja fuerte
+
+// RemoveUserFromStrongBox elimina un usuario de la caja fuerte
 func (r *MongoStrongBoxRepository) RemoveUserFromStrongBox(boxID string, userID string) error {
 	objectBoxID, err := primitive.ObjectIDFromHex(boxID)
 	if err != nil {

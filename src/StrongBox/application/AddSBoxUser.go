@@ -2,18 +2,17 @@ package application
 
 import "api/src/StrongBox/domain"
 
+
 type AddUserToStrongBoxService struct {
-	repository domain.StrongBoxRepository
+    repo domain.StrongBoxRepository
 }
 
-// ✅ Recibe el repositorio como dependencia
-func NewAddUserToStrongBoxService(repository domain.StrongBoxRepository) *AddUserToStrongBoxService {
-	return &AddUserToStrongBoxService{
-		repository: repository,
-	}
+
+func NewAddUserToStrongBoxService(repo domain.StrongBoxRepository) *AddUserToStrongBoxService {
+    return &AddUserToStrongBoxService{repo: repo}
 }
 
-// Lógica del caso de uso (sin acceso a la base de datos)
-func (s *AddUserToStrongBoxService) Execute(boxID string, user *domain.UserStrongBox) error {
-	return s.repository.AddUserToStrongBox(boxID, user)
+
+func (s *AddUserToStrongBoxService) Execute(boxID string, userID string) error {
+    return s.repo.AddUserToStrongBox(boxID, userID)
 }

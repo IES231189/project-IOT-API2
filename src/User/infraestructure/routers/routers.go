@@ -9,11 +9,12 @@ import (
 func SetupRoutes(r *gin.Engine) {
 	// Rutas para la gestión de usuarios
 	r.POST("/users", controllers.CrearUsuarioHandler)                        // Crear un nuevo usuario
-	r.POST("/users/:userID/invitados", controllers.AddGuestHandler)       // Agregar un invitado a un usuario
-	r.GET("/users", controllers.GetAllUsersHandler)                       // Obtener todos los usuarios
-	r.GET("/users/pin", controllers.GetUserByPinHandler)                  // Obtener un usuario por PIN
-	r.DELETE("/users", controllers.DeleteUserHandler)                     // Eliminar un usuario
-	r.DELETE("/users/:userID/invitados/:guestID", controllers.RemoveGuestHandler)
+	r.POST("/users/:userID/invitados", controllers.AddGuestHandler)          // Agregar un invitado a un usuario
+	r.GET("/users", controllers.GetAllUsersHandler)                          // Obtener todos los usuarios
+	r.GET("/users/pin", controllers.GetUserByPinHandler)                     // Obtener un usuario por PIN
+	r.GET("/users/:userID/invitados", controllers.GetUserGuestsHandler)      // Obtener los invitados de un usuario
+	r.DELETE("/users", controllers.DeleteUserHandler)                        // Eliminar un usuario
+	r.DELETE("/users/:userID/invitados/:guestID", controllers.RemoveGuestHandler) // Eliminar un invitado
 	
 	r.POST("/login", controllers.LoginUserHandler)
 }

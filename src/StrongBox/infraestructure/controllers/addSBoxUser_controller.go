@@ -1,40 +1,39 @@
 package controllers
 
 import (
-	"api/src/StrongBox/application"
-	"api/src/StrongBox/domain"
-	"api/src/StrongBox/infraestructure"
-	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"net/http"
+    "api/src/StrongBox/application"
+    "api/src/StrongBox/infraestructure"
+    "github.com/gin-gonic/gin"
+    "net/http"
+    "log"
 )
 
-// AddUserToStrongBox maneja la solicitud para agregar un usuario a una caja fuerte.
 func AddUserToStrongBox(c *gin.Context) {
-	// ✅ Inicializa el repositorio y el caso de uso directamente en el controlador
-	repo := infraestructure.NewMongoStrongBoxRepository() // Mongo repo
-	addUserUC := application.NewAddUserToStrongBoxService(repo) // Servicio con repo
+    // Crear el repositorio para la caja fuerte
+    repo := infraestructure.NewMongoStrongBoxRepository() // Crea el repositorio
 
-	// ✅ Obtener el ID de la caja fuerte desde la URL
-	boxID := c.Param("boxID")
+    // Crear el servicio para agregar un invitado a la caja fuerte
+    addUserUC := application.NewAddUserToStrongBoxService(repo) // Crea el servicio con el repo
 
-	// ✅ Decodificar el JSON del cuerpo de la solicitud
-	var user domain.UserStrongBox
-	err := json.NewDecoder(c.Request.Body).Decode(&user)
-	if err != nil {
-		http.Error(c.Writer, "Error al decodificar JSON", http.StatusBadRequest)
-		return
-	}
+    // Obtener los parámetros de la URL: boxID y guestID
+    boxID := c.Param("boxID")
+    guestID := c.Param("guestID")
 
-	// ✅ Ejecutar la lógica de negocio para agregar el usuario
-	err = addUserUC.Execute(boxID, &user)
-	if err != nil {
-		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
+    // Validar que los IDs sean válidos
+    if len(boxID) == 0 || len(guestID) == 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "ID de caja fuerte o invitado inválido"})
+        return
+    }
 
-	// ✅ Responder con éxito
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Usuario agregado exitosamente a la caja fuerte",
-	})
+    // Llamar al servicio para agregar el invitado a la caja fuerte
+    err := addUserUC.Execute(boxID, guestID)
+    if err != nil {
+        // Si ocurre un error, devolver un mensaje con el error
+        log.Println("Error al agregar invitado:", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Si todo fue bien, devolver una respuesta exitosa
+    c.JSON(http.StatusOK, gin.H{"message": "Invitado agregado exitosamente a la caja fuerte"})
 }

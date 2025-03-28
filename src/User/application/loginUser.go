@@ -22,29 +22,30 @@ func NewLoginUserService(repo domain.UserRepository) *LoginUserService {
 }
 
 // LoginUser autentica un usuario y genera un token JWT si es válido
-func (s *LoginUserService) LoginUser(correo, contraseña string) (string, error) {
+func (s *LoginUserService) LoginUser(correo, contraseña string) (string, string, error) {
 	// Buscar usuario por correo y contraseña (el repositorio debe implementar esta firma)
 	user, err := s.repo.LoginUser(correo, contraseña)
 	if err != nil {
-		return "", fmt.Errorf("error al buscar usuario: %v", err)
+		return "", "", fmt.Errorf("error al buscar usuario: %v", err)
 	}
 	if user == nil {
-		return "", errors.New("usuario no encontrado")
+		return "", "", errors.New("usuario no encontrado")
 	}
 
 	// Verificar contraseña con bcrypt
 	err = bcrypt.CompareHashAndPassword([]byte(user.Contraseña), []byte(contraseña))
 	if err != nil {
-		return "", errors.New("contraseña incorrecta")
+		return "", "", errors.New("contraseña incorrecta")
 	}
 
 	// Generar token JWT
 	token, err := generateJWT(user)
 	if err != nil {
-		return "", fmt.Errorf("error al generar token: %v", err)
+		return "", "", fmt.Errorf("error al generar token: %v", err)
 	}
 
-	return token, nil
+	// Retornar el token y el ID del usuario
+	return token, user.ID.Hex(), nil
 }
 
 // generateJWT genera un token JWT con la información del usuario

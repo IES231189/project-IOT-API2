@@ -3,6 +3,7 @@ package domain
 
 type StrongBoxRepository interface {
     CreateStrongBox(box *StrongBox) (string, error)           // Crea una nueva caja fuerte
+    ObtenerSiguienteCodigoProducto() (string, error)      
     DeleteStrongBox(ID string) error                          // Elimina una caja fuerte existente
     GetAllStrongBoxes() ([]StrongBox, error)                  // Obtiene todas las cajas fuertes
     GetStrongBoxByID(ID string) (*StrongBox, error)           // Obtiene una caja fuerte por ID

@@ -5,7 +5,8 @@ import (
 )
 
 type UserStrongBox struct {
-	UsuarioID primitive.ObjectID `bson:"usuario_id,omitempty" json:"usuario_id"`
+	UsuarioID primitive.ObjectID  `bson:"usuario_id,omitempty" json:"usuario_id"`
+    rol       string
 	Nombre    string             `bson:"nombre" json:"nombre"`
 	Pin       string             `bson:"pin" json:"pin"`
 }

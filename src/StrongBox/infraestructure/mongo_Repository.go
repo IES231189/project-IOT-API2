@@ -6,6 +6,10 @@ import (
 	"api/src/core"
 	"context"
 	"log"
+	"strings"
+	 "strconv"
+
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,12 +39,21 @@ func (r *MongoStrongBoxRepository) CreateStrongBox(strongBox *domain.StrongBox) 
 		return "", fmt.Errorf("la caja fuerte no puede ser nil")
 	}
 
+	// Asignar un código autoincremental antes de insertar la caja
+	codigoProducto, err := r.ObtenerSiguienteCodigoProducto()
+	if err != nil {
+		return "", fmt.Errorf("error generando código de producto: %v", err)
+	}
+	strongBox.CodigoProducto = codigoProducto
+
+	// Insertar la caja en la base de datos
 	result, err := r.collection.InsertOne(context.TODO(), strongBox)
 	if err != nil {
 		log.Printf("Error al crear la caja fuerte: %v", err)
 		return "", err
 	}
 
+	// Convertir el ID insertado a ObjectID
 	objectID, ok := result.InsertedID.(primitive.ObjectID)
 	if !ok {
 		return "", fmt.Errorf("no se pudo convertir el ID a ObjectID")
@@ -48,6 +61,39 @@ func (r *MongoStrongBoxRepository) CreateStrongBox(strongBox *domain.StrongBox) 
 	return objectID.Hex(), nil
 }
 
+// ObtenerSiguienteCodigoProducto obtiene el último código de producto y genera el siguiente
+func (r *MongoStrongBoxRepository) ObtenerSiguienteCodigoProducto() (string, error) {
+	// Variable para almacenar la última caja fuerte encontrada
+	var ultimaCaja domain.StrongBox
+
+	// Buscar la última caja fuerte ordenando por `codigo_producto` de mayor a menor
+	err := r.collection.FindOne(
+		context.TODO(),
+		bson.M{}, // Sin filtros, buscamos cualquier caja fuerte existente
+		options.FindOne().SetSort(bson.D{{"codigo_producto", -1}}),
+	).Decode(&ultimaCaja)
+
+	// Si no hay documentos, comenzamos desde "CP-001"
+	if err == mongo.ErrNoDocuments {
+		return "CP-001", nil
+	} else if err != nil {
+		log.Printf("Error al obtener la última caja fuerte: %v", err)
+		return "", fmt.Errorf("error al obtener la última caja fuerte: %v", err)
+	}
+
+	// Extraer la parte numérica del código (ejemplo: "CP-045" → "045")
+	parteNumerica := strings.TrimPrefix(ultimaCaja.CodigoProducto, "CP-")
+
+	// Convertir a entero para incrementar
+	ultimoNumero, err := strconv.Atoi(parteNumerica)
+	if err != nil {
+		return "CP-001", nil // Si falla la conversión, empezamos desde CP-001
+	}
+
+	// Generar el siguiente código con formato CP-XXX (ejemplo: "CP-046")
+	nuevoCodigo := fmt.Sprintf("CP-%03d", ultimoNumero+1)
+	return nuevoCodigo, nil
+}
 // DeleteStrongBox elimina una caja fuerte de la base de datos por ID
 func (r *MongoStrongBoxRepository) DeleteStrongBox(ID string) error {
 	objectID, err := primitive.ObjectIDFromHex(ID)

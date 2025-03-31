@@ -7,11 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"encoding/json"
 	"net/http"
-	"go.mongodb.org/mongo-driver/bson/primitive"  // Importa el paquete primitive
+	"go.mongodb.org/mongo-driver/bson/primitive"  
 )
 
-// CrearStrongBoxHandler maneja la solicitud para crear una nueva caja fuerte.
+
 func CrearStrongBoxHandler(c *gin.Context) {
+	
 	// Inicializa el repositorio y el servicio
 	repo := infraestructure.NewMongoStrongBoxRepository()
 	crearStrongBoxUC := application.NewCreateStrongBoxService(repo)

@@ -1,9 +1,9 @@
 package main
 
 import (
-	//"api/src/User/application"
-	//"api/src/User/infraestructure"
-	//"api/src/User/infraestructure/Mqtt"
+	"api/src/User/application"
+	"api/src/User/infraestructure"
+	"api/src/User/infraestructure/Mqtt"
 	userRoutes "api/src/User/infraestructure/routers" 
 	strongBoxRoutes "api/src/StrongBox/infraestructure/routers" 
 	"api/src/core"
@@ -50,9 +50,9 @@ func main() {
 	r.GET("/testMongo", handler)
 
 	// Inicializar la conexión MQTT y la suscripción
-	//repo := infraestructure.NewMongoUserRepository()
-	//useCase := application.NewObtenerUsuarioPorPin(repo)
-	//Mqtt.NewMqttService(useCase) // Inicia la suscripción a MQTT
+	repo := infraestructure.NewMongoUserRepository()
+	useCase := application.NewObtenerUsuarioPorPin(repo)
+	Mqtt.NewMqttService(useCase) // Inicia la suscripción a MQTT
 
 	// Iniciar servidor en el puerto 8080
 	log.Println("Servidor escuchando en el puerto 8080...")

@@ -2,9 +2,9 @@ package domain
 
 
 type UserRepository interface {
-	CreateUser(user *User) (string, error)       // Crear un nuevo usuario
-	DeleteUser(ID string) error                  // Eliminar un usuario por ID
-	GetAllUsers() ([]User, error)                // Obtener todos los usuarios
+	CreateUser(user *User) (string, error)    
+	DeleteUser(ID string) error                 
+	GetAllUsers() ([]User, error)                
 	GetUserByPin(Pin string) (*User, error)
 	GetGuestsByUserID(userID string) ([]Invitado, error) 
 	LoginUser(correo, contraseña string) (*User, error)      

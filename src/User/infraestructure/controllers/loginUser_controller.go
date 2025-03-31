@@ -11,7 +11,7 @@ import (
 func LoginUserHandler(c *gin.Context) {
     log.Println("Recibiendo solicitud POST para iniciar sesión")
 
-    // Estructura para los datos de inicio de sesión
+    
     var loginData struct {
         Correo     string `json:"correo"`
         Contraseña string `json:"contraseña"`

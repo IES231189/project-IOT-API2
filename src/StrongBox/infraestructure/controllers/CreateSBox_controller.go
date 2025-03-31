@@ -7,19 +7,26 @@ import (
 	"github.com/gin-gonic/gin"
 	"encoding/json"
 	"net/http"
+	"go.mongodb.org/mongo-driver/bson/primitive"  // Importa el paquete primitive
 )
 
 // CrearStrongBoxHandler maneja la solicitud para crear una nueva caja fuerte.
 func CrearStrongBoxHandler(c *gin.Context) {
-	// Inicializa el repositorio y el caso de uso directamente en el controlador
-	repo := infraestructure.NewMongoStrongBoxRepository() // Mongo repo
-	crearStrongBoxUC := application.NewCreateStrongBoxService(repo) // Servicio con repo
+	// Inicializa el repositorio y el servicio
+	repo := infraestructure.NewMongoStrongBoxRepository()
+	crearStrongBoxUC := application.NewCreateStrongBoxService(repo)
 
 	// Decodificar el JSON del cuerpo de la solicitud
 	var strongBox domain.StrongBox
 	err := json.NewDecoder(c.Request.Body).Decode(&strongBox)
 	if err != nil {
 		http.Error(c.Writer, "Error al decodificar JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Asegúrate de que los campos importantes estén presentes
+	if strongBox.UsuarioID == primitive.NilObjectID {
+		http.Error(c.Writer, "El ID del usuario es obligatorio", http.StatusBadRequest)
 		return
 	}
 
@@ -32,7 +39,7 @@ func CrearStrongBoxHandler(c *gin.Context) {
 
 	// Responder con el ID de la caja fuerte creada
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Caja fuerte creada exitosamente",
-		"strongBox_id": strongBoxID,
+		"message":    "Caja fuerte creada exitosamente",
+		"strongBoxID": strongBoxID,
 	})
 }

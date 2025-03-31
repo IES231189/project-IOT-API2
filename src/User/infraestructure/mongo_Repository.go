@@ -25,7 +25,7 @@ func NewMongoUserRepository() *MongoUserRepository {
 	if client == nil {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
-	collection := client.Database("proyecto").Collection("Usuarios")
+	collection := client.Database("base_iot_db").Collection("usuarios")
 	return &MongoUserRepository{collection: collection}
 }
 

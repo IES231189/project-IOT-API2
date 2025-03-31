@@ -10,5 +10,8 @@ type StrongBox struct {
 	Estado            string             `bson:"estado" json:"estado"`
 	UltimaActividad   primitive.DateTime `bson:"ultima_actividad" json:"ultima_actividad"`
 	UsuariosConAcceso []UserStrongBox    `bson:"usuarios_con_acceso" json:"usuarios_con_acceso"`
+	UsuarioID         primitive.ObjectID `bson:"usuario_id" json:"usuario_id"`   // ID del usuario propietario de la caja
+	CodigoProducto    string             `bson:"codigo_producto" json:"codigo_producto"` // Nuevo atributo código producto
 }
+
 

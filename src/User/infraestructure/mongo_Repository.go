@@ -4,15 +4,15 @@ import (
 	"api/src/User/domain"
 	"api/src/core"
 	"context"
-	"fmt"
-	"strings"
-	"log"
 	"errors"
+	"fmt"
+	"log"
+	"strings"
 
-	"golang.org/x/crypto/bcrypt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type MongoUserRepository struct {
@@ -25,7 +25,7 @@ func NewMongoUserRepository() *MongoUserRepository {
 	if client == nil {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
-	collection := client.Database("base_iot_db").Collection("usuarios")
+	collection := client.Database("proyecto").Collection("usuarios")
 	return &MongoUserRepository{collection: collection}
 }
 
@@ -82,7 +82,6 @@ func (r *MongoUserRepository) LoginUser(correo, contraseña string) (*domain.Use
 	return &user, nil
 }
 
-
 // DeleteUser elimina un usuario de la base de datos por ID
 func (r *MongoUserRepository) DeleteUser(ID string) error {
 	objectID, err := primitive.ObjectIDFromHex(ID)
@@ -129,7 +128,7 @@ func (r *MongoUserRepository) GetAllUsers() ([]domain.User, error) {
 }
 
 // GetUserByPin busca un usuario por su PIN
-func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
+/*func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
 	if Pin == "" {
 		return nil, fmt.Errorf("el PIN no puede estar vacío")
 	}
@@ -147,6 +146,41 @@ func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, error) {
 
 	log.Printf("Usuario encontrado: %+v", user)
 	return &user, nil
+}*/
+
+func (r *MongoUserRepository) GetUserByPin(Pin string) (*domain.User, *domain.Invitado, error) {
+    if Pin == "" {
+        return nil, nil, fmt.Errorf("el PIN no puede estar vacío")
+    }
+
+    // Primero busca si es un usuario principal
+    var user domain.User
+    err := r.collection.FindOne(context.TODO(), bson.M{"pin": Pin}).Decode(&user)
+    if err == nil {
+        return &user, nil, nil // Es un usuario principal
+    }
+    if err != mongo.ErrNoDocuments {
+        return nil, nil, err // Error real en la consulta
+    }
+
+    // Si no es usuario principal, busca en invitados
+    filter := bson.M{"MisInvitados.pin": Pin}
+    err = r.collection.FindOne(context.TODO(), filter).Decode(&user)
+    if err != nil {
+        if err == mongo.ErrNoDocuments {
+            return nil, nil, nil // No encontrado
+        }
+        return nil, nil, err // Error real en la consulta
+    }
+
+    // Encontró el usuario que tiene este invitado, ahora busca el invitado específico
+    for _, invitado := range user.MisInvitados {
+        if invitado.Pin == Pin {
+            return &user, &invitado, nil
+        }
+    }
+
+    return nil, nil, nil // No debería llegar aquí si la consulta encontró algo
 }
 
 // UpdateUser actualiza los datos de un usuario por su ID
@@ -163,10 +197,10 @@ func (r *MongoUserRepository) UpdateUser(ID string, updatedUser *domain.User) er
 
 	update := bson.M{
 		"$set": bson.M{
-			"nombre": updatedUser.Nombre,
-			"correo": updatedUser.Correo,
+			"nombre":     updatedUser.Nombre,
+			"correo":     updatedUser.Correo,
 			"contraseña": updatedUser.Contraseña,
-			"pin":    updatedUser.Pin,
+			"pin":        updatedUser.Pin,
 		},
 	}
 
@@ -202,7 +236,6 @@ func (r *MongoUserRepository) AddGuest(userID string, guest domain.Invitado) err
 	return nil
 }
 
-
 func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 	objectUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -216,7 +249,6 @@ func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 		return fmt.Errorf("ID de invitado inválido")
 	}
 
-
 	var usuario domain.User
 	err = r.collection.FindOne(context.TODO(), bson.M{"_id": objectUserID}).Decode(&usuario)
 	if err != nil {
@@ -224,7 +256,6 @@ func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 		return fmt.Errorf("usuario no encontrado")
 	}
 
-	
 	log.Printf("Invitados actuales: %+v", usuario.MisInvitados)
 
 	// Intentar eliminar el invitado
@@ -240,7 +271,6 @@ func (r *MongoUserRepository) RemoveGuest(userID string, guestID string) error {
 		return err
 	}
 
-	
 	if result.ModifiedCount == 0 {
 		log.Println("⚠️ No se encontró el invitado o ya había sido eliminado")
 		return mongo.ErrNoDocuments
@@ -272,6 +302,3 @@ func (r *MongoUserRepository) GetGuestsByUserID(userID string) ([]domain.Invitad
 
 	return usuario.MisInvitados, nil
 }
-
-
-

@@ -13,7 +13,7 @@ func NewObtenerUsuarioPorPin(repo domain.UserRepository) *ObtenerUsuarioPorPin {
 }
 
 // Ejecutar obtiene un usuario de la base de datos por su PIN
-func (uc *ObtenerUsuarioPorPin) Ejecutar(pin string) (*domain.User, error) {
-	// Llamar al repositorio para buscar el usuario por PIN
-	return uc.repo.GetUserByPin(pin)
+
+func (uc *ObtenerUsuarioPorPin) Ejecutar(pin string) (*domain.User, *domain.Invitado, error) {
+    return uc.repo.GetUserByPin(pin)
 }

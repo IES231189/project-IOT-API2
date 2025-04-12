@@ -17,4 +17,6 @@ func SetupRoutes(r *gin.Engine) {
 	r.DELETE("/users/:userID/invitados/:guestID", controllers.RemoveGuestHandler) // Eliminar un invitado
 	
 	r.POST("/login", controllers.LoginUserHandler)
+	r.GET("/users/accesos-exitosos", controllers.GetAccesosExitososHandler) 
+	r.GET("/accesos/incorrectos", controllers.GetAccesosIncorrectosHandler)
 }

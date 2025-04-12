@@ -2,15 +2,14 @@ package controllers
 
 import (
 	"api/src/User/application"
+	//"api/src/User/domain"
 	"api/src/User/infraestructure"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
 
-
 func GetUserByPinHandler(c *gin.Context) {
-	
 	log.Println("Recibiendo solicitud GET para obtener un usuario por PIN")
 
 	pin := c.DefaultQuery("pin", "")
@@ -28,7 +27,7 @@ func GetUserByPinHandler(c *gin.Context) {
 
 	useCase := application.NewObtenerUsuarioPorPin(repo)
 
-	user, err := useCase.Ejecutar(pin)
+	user, invitado, err := useCase.Ejecutar(pin)
 	if err != nil {
 		log.Printf("Error al obtener el usuario: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener el usuario"})
@@ -40,5 +39,23 @@ func GetUserByPinHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	// Crear respuesta basada en si es usuario principal o invitado
+	var response interface{}
+	if invitado != nil {
+		response = gin.H{
+			"tipo":      "invitado",
+			"invitado":  invitado,
+			"anfitrion": gin.H{
+				"id":     user.ID,
+				"nombre": user.Nombre,
+			},
+		}
+	} else {
+		response = gin.H{
+			"tipo":    "usuario",
+			"usuario": user,
+		}
+	}
+
+	c.JSON(http.StatusOK, response)
 }

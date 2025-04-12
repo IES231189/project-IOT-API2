@@ -24,8 +24,8 @@ func NewMongoStrongBoxRepository() *MongoStrongBoxRepository {
 	if client == nil {
 		log.Fatal("No se pudo obtener el cliente de MongoDB")
 	}
-	collection := client.Database("base_iot_db").Collection("StrongBox")
-	userCollection := client.Database("base_iot_db").Collection("usuarios") // Inicializamos la colección de usuarios
+	collection := client.Database("proyecto").Collection("strongboxes")
+	userCollection := client.Database("proyecto").Collection("usuarios") // Inicializamos la colección de usuarios
 	return &MongoStrongBoxRepository{collection: collection, userCollection: userCollection}
 }
 
